@@ -7,6 +7,32 @@
 - Ahmad Anas Bin Azhar (22005996)
 - Muhammad Hanis Afifi Bin Azmi (22001602)
 
+## Guide
+
+To install dependencies, run:
+
+```sh
+pip install -r requirements.txt
+```
+
+To see sniffing options:
+
+```sh
+./sniffer.py --help
+```
+
+To see spoofing options:
+
+```sh
+./spoofer.py --help
+```
+
+To see traceroute options:
+
+```sh
+./traceroute.py --help
+```
+
 ## Task 1.1: Sniffing Packets
 
 ```py
