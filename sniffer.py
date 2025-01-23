@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from ipaddress import ip_address
 
 from scapy.all import *
+from scapy.config import conf
 from scapy.sendrecv import sniff
 
 from filtering import FilterBuilder, Protocol
@@ -12,6 +13,19 @@ from filtering import FilterBuilder, Protocol
 def add_sniffing_cli_options(parser: (ArgumentParser | None) = None) -> ArgumentParser:
     if parser is None:
         parser = ArgumentParser()
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="outputs packet details instead of summary"
+    )
+    parser.add_argument(
+        "--sniff-interface",
+        type=str,
+        choices=list(conf.ifaces),
+        help="sniffs using interface chosen",
+        default=None
+    )
     parser.add_argument(
         "--sniff-protocol",
         type=lambda protocol: Protocol[protocol],
@@ -80,7 +94,11 @@ def start_sniff() -> None:
         .build()
     print(
         f"\n[*] Sniffing with filter \"{sniff_filter if sniff_filter else None}\"...\n")
-    sniff(filter=sniff_filter, prn=lambda packet: packet.show())
+    sniff(
+        iface=args.sniff_interface,
+        filter=sniff_filter,
+        prn=lambda packet: packet.show() if args.verbose else packet.summary()
+    )
 
 
 if __name__ == "__main__":
