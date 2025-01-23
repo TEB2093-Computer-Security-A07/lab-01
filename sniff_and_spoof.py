@@ -64,7 +64,7 @@ def set_interface_and_spoof_icmp(interface: str | None) -> None:
                 seq=packet[ICMP].seq
             )
 
-            custom_icmp.load = packet[ICMP].load
+            custom_icmp.payload = packet[ICMP].payload
 
             start_spoof(
                 spoof_source_ip=origin_dst_ip,

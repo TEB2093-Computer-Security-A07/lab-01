@@ -136,6 +136,9 @@ class FilterBuilder:
         if self._dst_port is not None:
             filters.append(f"and dst port {self._dst_port}")
 
+        while filters and filters[-1] in ("and", "or"):
+            filters.pop()
+
         if len(filters) == 0:
             return ""
         return " ".join(filters)

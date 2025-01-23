@@ -10,6 +10,7 @@
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
   "markdownlint.config": {
-    "no-emphasis-as-heading": false
+    "no-emphasis-as-heading": false,
+    "commands-show-output": false
   }
 }

@@ -7,30 +7,36 @@
 - Ahmad Anas Bin Azhar (22005996)
 - Muhammad Hanis Afifi Bin Azmi (22001602)
 
-## Guide
+## Quick Guide
 
 To install dependencies, run:
 
-```sh
+```bash
 pip install -r requirements.txt
 ```
 
 To see sniffing options:
 
-```sh
+```bash
 ./sniffer.py --help
 ```
 
 To see spoofing options:
 
-```sh
+```bash
 ./spoofer.py --help
 ```
 
 To see traceroute options:
 
-```sh
+```bash
 ./traceroute.py --help
+```
+
+To see sniff-and-then-spoof options:
+
+```bash
+./sniff_and_spoof.py --help
 ```
 
 ## Task 1.1: Sniffing Packets
@@ -49,7 +55,7 @@ pkt = sniff(filter='icmp',prn=print_pkt)
 
 The above program sniffs packets. For each captured packet, the callback function `print_pkt()` will be invoked; this function will print out some of the information about the packet. Run the program with the root privilege and demonstrate that you can indeed capture packets. After that, run the program again, but without using the root privilege; describe and explain your observations.
 
-```sh
+```bash
 # Make the program executable
 $ chmod a+x sniffer.py
 
@@ -121,7 +127,7 @@ $ sudo ./sniffer.py
 
 **Observation:** ICMP `echo-request` packet is sent from VM to `8.8.8.8`. `8.8.8.8` replies with `echo-reply` back to VM. These exchanges were triggered manually via `ping -c 1 8.8.8.8` command.
 
-```sh
+```bash
 # Run the program without the root privilege
 $ ./sniffer.py
 ```
@@ -156,6 +162,10 @@ PermissionError: [Errno 1] Operation not permitted
 Please set the following filters and demonstrate your sniffer program again (each filter should be set separately):
 
 - Capture only `ICMP` packet.
+
+    ```bash
+    $ ./sniffer.py --sniff-protocol ICMP
+    ```
 
     **Output:**
 
@@ -221,6 +231,10 @@ Please set the following filters and demonstrate your sniffer program again (eac
 
 - Capture any `TCP` packet that comes from a particular IP and with a destination port number `23`.
 
+    ```bash
+    $ ./sniffer.py --sniff-protocol TCP --sniff-source-ip 172.29.85.86 --sniff-source-port 23
+    ```
+
     **Output:**
 
     ```txt
@@ -259,6 +273,10 @@ Please set the following filters and demonstrate your sniffer program again (eac
     ```
 
 - Capture packets coming from or going to a particular subnet. You can pick any subnet, such as `128.230.0.0/16`; you should not pick the subnet that your VM is attached to.
+
+    ```bash
+    $ ./sniffer.py --sniff-source-ip 172.29.80.0 --sniff-source-subnet 21 --sniff-destination-ip 172.29.80.0 --sniff-destination-subnet 21
+    ```
 
     **Output:**
 
@@ -336,9 +354,13 @@ send(p)
 
 Please make any necessary change to the sample code, and then demonstrate that you can spoof an ICMP echo request packet with an arbitrary source IP address.
 
-**Output:**
+### When IP is not spoofed
 
-*When IP is not spoofed*
+```bash
+$ ./spoofer.py --spoof-destination-ip 127.0.0.1
+```
+
+**Output:**
 
 ```txt
 [*] Spoofer: source IP 127.0.0.1...
@@ -349,7 +371,13 @@ Sent 1 packets.
 
 ![Not Spoofed ICMP viewed from Wireshark](./assets/task_1_2_not_spoofed.png)
 
-*When IP is spoofed*
+### When IP is spoofed
+
+```bash
+$ ./spoofer.py --spoof-source-ip 192.168.69.69 --spoof-destination-ip 127.0.0.1
+```
+
+**Output:**
 
 ```txt
 [*] Spoofer: source IP from 127.0.0.1 to 192.168.69.69...
@@ -375,6 +403,10 @@ send(a/b)
 ```
 
 If you are an experienced Python programmer, you can write your tool to perform the entire procedure automatically. If you are new to Python programming, you can do it by manually changing the TTL field in each round, and record the IP address based on your observation from Wireshark. Either way is acceptable, as long as you get the result.
+
+```bash
+$ ./traceroute.py --traceroute-destination-ip 8.8.8.8 --traceroute-start-ttl 1 --traceroute-end-ttl 30
+```
 
 **Output:**
 
@@ -412,4 +444,106 @@ If you are an experienced Python programmer, you can write your tool to perform 
 
 In this task, you will combine the sniffing and spoofing techniques to implement the following sniff-and-then-spoof program. You need two VMs on the same LAN. From VM A, you ping an IP X. This will generate an ICMP echo request packet. If X is alive, the ping program will receive an echo reply, and print out the response. Your sniff-and-then-spoof program runs on VM B, which monitors the LAN through packet sniffing. Whenever it sees an ICMP echo request, regardless of what the target IP address is, your program should immediately send out an echo reply using the packet spoofing technique. Therefore, regardless of whether machine X is alive or not, the ping program will always receive a reply, indicating that X is alive. You need to use Scapy to do this task. In your report, you need to provide evidence to demonstrate that your technique works.
 
-***ANSWER HERE***
+### Without Sniff and Spoof
+
+```bash
+$ ping -c 1 172.172.172.172
+```
+
+**Output:**
+
+```txt
+PING 172.172.172.172 (172.172.172.172): 56 data bytes
+
+--- 172.172.172.172 ping statistics ---
+1 packets transmitted, 0 packets received, 100.0% packet loss
+```
+
+### With Sniff and Spoof
+
+```bash
+$ ping -c 1 172.172.172.172
+```
+
+**Output:**
+
+```txt
+PING 172.172.172.172 (172.172.172.172): 56 data bytes
+64 bytes from 172.172.172.172: icmp_seq=0 ttl=64 time=7.301 ms
+
+--- 172.172.172.172 ping statistics ---
+1 packets transmitted, 1 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 7.301/7.301/7.301/0.000 ms
+```
+
+### From Sniffer & Spoofer
+
+```bash
+$ ./sniff_and_spoof.py --sniff-interface en10 --sniff-source-ip 172.16.84.255
+```
+
+**Output:**
+
+```txt
+[*] Sniffing with filter "icmp and src host 172.16.84.255"...
+
+[+] Detected ICMP echo-request from 172.16.84.255 to 172.172.172.172!
+###[ Ethernet ]###
+  dst       = cc:d3:42:8e:c6:82
+  src       = 00:e0:4c:68:09:df
+  type      = IPv4
+###[ IP ]###
+     version   = 4
+     ihl       = 5
+     tos       = 0x0
+     len       = 84
+     id        = 57750
+     flags     =
+     frag      = 0
+     ttl       = 64
+     proto     = icmp
+     chksum    = 0x3eaa
+     src       = 172.16.84.255
+     dst       = 172.172.172.172
+     \options   \
+###[ ICMP ]###
+        type      = echo-request
+        code      = 0
+        chksum    = 0x55ab
+        id        = 0xa97d
+        seq       = 0x0
+        unused    = b''
+###[ Raw ]###
+           load      = b'g\x92l\xe2\x00\x089W\x08\t\n\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f !"#$%&\'()*+,-./01234567'
+
+[*] Spoofer: source IP from 127.0.0.1 to 172.172.172.172...
+[*] Spoofer: destination IP 172.16.84.255...
+[+] Spoofed packet built!
+###[ IP ]###
+  version   = 4
+  ihl       = 5
+  tos       = 0x0
+  len       = 84
+  id        = 1
+  flags     =
+  frag      = 0
+  ttl       = 64
+  proto     = icmp
+  chksum    = 0x2040
+  src       = 172.172.172.172
+  dst       = 172.16.84.255
+  \options   \
+###[ ICMP ]###
+     type      = echo-reply
+     code      = 0
+     chksum    = 0x5dab
+     id        = 0xa97d
+     seq       = 0x0
+     unused    = b''
+###[ Raw ]###
+        load      = b'g\x92l\xe2\x00\x089W\x08\t\n\x0b\x0c\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f !"#$%&\'()*+,-./01234567'
+
+.
+Sent 1 packets.
+[+] Sent spoofed ICMP echo-reply as 172.172.172.172 to 172.16.84.255 over the interface en10!
+```
