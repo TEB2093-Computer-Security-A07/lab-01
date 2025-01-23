@@ -107,7 +107,7 @@ class FilterBuilder:
         if self._protocol is not None:
             filters.append(str(self._protocol.value))
 
-        if len(filters) == 1 and len(filters[0]) > 1:
+        if len(filters) == 1 and len(filters[0].split(' ')) > 1:
             filters.append("and")
 
         # add src ip, subnet and port
@@ -123,7 +123,7 @@ class FilterBuilder:
         # combine src to dst
         if self._ip_exclusive:
             filters.append("and")
-        else:
+        elif self._dst_ip is not None:
             filters.append("or")
 
         # add dst ip, subnet and port
