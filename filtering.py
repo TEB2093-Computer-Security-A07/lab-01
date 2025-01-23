@@ -107,7 +107,7 @@ class FilterBuilder:
         if self._protocol is not None:
             filters.append(str(self._protocol.value))
 
-        if len(filters) == 1 and len(filters[0].split(' ')) > 1:
+        if len(filters) == 1 and len(filters[0]) > 1:
             filters.append("and")
 
         # add src ip, subnet and port

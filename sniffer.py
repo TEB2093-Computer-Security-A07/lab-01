@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+from typing import Callable
 from argparse import ArgumentParser
-from ipaddress import ip_address
+from ipaddress import IPv4Address
 
-from scapy.all import *
 from scapy.config import conf
 from scapy.sendrecv import sniff
+from scapy.layers.l2 import Ether
 
 from filtering import FilterBuilder, Protocol
 
@@ -48,12 +49,12 @@ def add_sniffing_cli_options(parser: (ArgumentParser | None) = None) -> Argument
     )
     parser.add_argument(
         "--sniff-source-ip",
-        type=ip_address,
+        type=IPv4Address,
         help="filters sniffed packets from source IP"
     )
     parser.add_argument(
         "--sniff-destination-ip",
-        type=ip_address,
+        type=IPv4Address,
         help="filters sniffed packets from destination IP"
     )
     parser.add_argument(
@@ -80,7 +81,22 @@ def add_sniffing_cli_options(parser: (ArgumentParser | None) = None) -> Argument
     return parser
 
 
-def start_sniff() -> None:
+def start_sniff(verbose: bool, sniff_filter: str, sniff_interface: str | None = None, sniff_function: Callable[[Ether], str | None] | None = None) -> None:
+    print(
+        f"\n[*] Sniffing with filter \"{sniff_filter if sniff_filter else None}\"...\n")
+
+    if sniff_function is None:
+        def sniff_function(packet):
+            return packet.show() if args.verbose else packet.summary()
+
+    sniff(
+        iface=sniff_interface,
+        filter=sniff_filter,
+        prn=sniff_function
+    )
+
+
+if __name__ == "__main__":
     args = add_sniffing_cli_options().parse_args()
     sniff_filter = FilterBuilder() \
         .set_protocol(args.sniff_protocol) \
@@ -92,14 +108,9 @@ def start_sniff() -> None:
         .set_destination_port(args.sniff_destination_port) \
         .set_ip_exclusive(args.sniff_ip_exclusive) \
         .build()
-    print(
-        f"\n[*] Sniffing with filter \"{sniff_filter if sniff_filter else None}\"...\n")
-    sniff(
-        iface=args.sniff_interface,
-        filter=sniff_filter,
-        prn=lambda packet: packet.show() if args.verbose else packet.summary()
+
+    start_sniff(
+        verbose=args.verbose,
+        sniff_filter=sniff_filter,
+        sniff_interface=args.sniff_interface
     )
-
-
-if __name__ == "__main__":
-    start_sniff()
